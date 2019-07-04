@@ -1,5 +1,7 @@
 from os import getenv
 from dotenv import load_dotenv, find_dotenv
+import argparse
+import ssl
 import sys
 from datetime import datetime, timedelta
 import os
@@ -12,28 +14,46 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from functools import reduce
 import operator
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import urllib.request
 
 load_dotenv(find_dotenv())
 
-fw_ip = os.getenv('fw_ip')
-api_key = os.getenv('api_key')
+parser = argparse.ArgumentParser()
+parser.add_argument("firewall_ip", nargs="?", default="192.168.1.120", help="Optional. If nothing entered '192.168.1.120' will be used")
+parser.add_argument("username", nargs="?", default="admin", help="Optional. If nothing entered 'admin' will be used")
+parser.add_argument("password", nargs="?", default="admin", help="Optional. If nothing entered 'admin' will be used")
+args = parser.parse_args()
+
+user = args.username
+password = args.password
+fw_ip = args.firewall_ip
+
+api_url = f"https://{fw_ip}/api/?type=keygen&user={user}&password={password}"
+get_api = requests.get(api_url, verify=False).content
+parsed = ET.fromstring(get_api)
+api_key = parsed[0][0].text
+
 base_url = f'https://{fw_ip}/api/?&key={api_key}'
 pcaps_path = 'test-pcaps/'
-time_range = datetime.now() - timedelta(minutes = 170)
+time_range = datetime.now() - timedelta(days = 1)
 threat_time = time_range.strftime('%Y/%m/%d %H:%M:%S')
 now = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
 FIELDS = ['Cdn-Src-Ip','X-Forwarded-For','RealIp','X-Ser','Client-Ip']
 
 def download_pcaps(pcap_id, pcap_time):
-    url = f'{base_url}&type=export&category=threat-pcap&pcap-id={pcap_id}&search-time={pcap_time}'
-    res = requests.get(url, verify=False)
-    content = str(res.content)
-    if 'error' not in content:
-        file = Path(f'{pcaps_path}{pcap_id}.pcap')
-        if file.exists() != True:
-            with open(f'{pcaps_path}{pcap_id}.pcap', 'wb') as f:
-                f.write(res.content)
-        return
+    try:
+        url = f'{base_url}&type=export&category=threat-pcap&pcap-id={pcap_id}&search-time={pcap_time}'
+        res = requests.get(url, verify=False)
+        res.raise_for_status()
+        content = str(res.content)
+        if 'error' not in content:
+            file = Path(f'{pcaps_path}{pcap_id}.pcap')
+            if file.exists() != True:
+                with open(f'{pcaps_path}{pcap_id}.pcap', 'wb') as f:
+                    f.write(res.content)
+            return
+    except requests.exceptions.RequestException as e:
+        return e
 
 def get_threat_logs():
     url = f"{base_url}&type=log&log-type=threat&query=(receive_time geq '{threat_time}')"
