@@ -3,6 +3,8 @@ import requests
 import re
 from requests.exceptions import HTTPError, ConnectionError
 
+##
+
 result = []
 
 def get_indicators_output(url):
