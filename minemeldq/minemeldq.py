@@ -3,8 +3,6 @@ import requests
 import re
 from requests.exceptions import HTTPError, ConnectionError
 
-##
-
 result = []
 
 def get_indicators_output(url):
@@ -44,8 +42,8 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser()
         parser.add_argument("instance", nargs="?", help="Unique ID of MineMeld instance")
         parser.add_argument("node", nargs="?", help="MineMeld output node name")
-        parser.add_argument("ioc", nargs="?", help="Indicator to search for in MineMeld output node")   
-        
+        parser.add_argument("ioc", nargs="?", help="Indicator to search for in MineMeld output node")
+
         args = parser.parse_args()
         mm_instance = args.instance
         output_node = args.node
