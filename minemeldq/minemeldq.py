@@ -7,17 +7,17 @@ result = []
 
 def get_indicators_output(url):
     try:
-        r = requests.get(url, timeout=(3.05, 5))
-        r.raise_for_status()
-        if r.status_code == 200:
-            data = r.text
-            return data
-
-    except ConnectionError as conn_err:
-        print('Connection error occurred: {}'.format(conn_err))
-
-    except HTTPError as http_err:
-        print('HTTP error occurred: {}'.format(http_err))
+        res = requests.get(url, timeout=(3.05, 5))
+        res.raise_for_status()
+        if res.status_code < 200 or res.status_code >= 300:
+        if res.status_code == 401:
+            return_error('Request Failed with status: 401 Unauthorized - Invalid Username or Password')
+        elif res.status_code == 415:
+           return_error('Request Failed with status: 415 - Invalid accept header or content type header')
+        else:
+            return_error('Request Failed with status: ' + str(res.status_code) + '. Reason is: ' + str(res.reason))
+        data = res.text
+        return res
 
 def get_match(indicator, url):
     try:
