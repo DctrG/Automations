@@ -1,0 +1,157 @@
+id: 990fbd44-dee6-4900-8b26-55aacfcf32e9
+version: 57
+name: Block_Malicous_IoCs
+starttaskid: "0"
+tasks:
+  "0":
+    id: "0"
+    taskid: a86e6b9d-f226-4719-85a7-be0f9dea8f8a
+    type: start
+    task:
+      id: a86e6b9d-f226-4719-85a7-be0f9dea8f8a
+      version: -1
+      name: ""
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+      - "4"
+    separatecontext: false
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 50
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+  "2":
+    id: "2"
+    taskid: 39a6f516-b4ce-4145-8872-8eedc5ca6c61
+    type: regular
+    task:
+      id: 39a6f516-b4ce-4145-8872-8eedc5ca6c61
+      version: -1
+      name: ParseCSV
+      description: This script will parse a CSV file and place the unique IPs, Domains
+        and Hashes into the context.
+      scriptName: ParseCSV
+      type: regular
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+      - "3"
+    scriptarguments:
+      codec: {}
+      domains: {}
+      entryID: {}
+      file:
+        complex:
+          root: incident
+          accessor: labels.Email/attachments
+      hashes: {}
+      ips: {}
+      parseAll: {}
+    separatecontext: false
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 370
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+  "3":
+    id: "3"
+    taskid: 4ef15bb4-54cc-4138-8e1d-e4b6f9b543ad
+    type: playbook
+    task:
+      id: 4ef15bb4-54cc-4138-8e1d-e4b6f9b543ad
+      version: -1
+      name: Block IP - Generic - G
+      playbookName: Block IP - Generic - G
+      type: playbook
+      iscommand: false
+      brand: ""
+    scriptarguments:
+      IP:
+        complex:
+          root: ParseCSV
+          accessor: ParsedCSV
+          transformers:
+          - operator: DT
+            args:
+              dt:
+                value:
+                  simple: IP
+      IPBlacklistMiner:
+        simple: localDB-hs
+    separatecontext: true
+    loop:
+      iscommand: false
+      exitCondition: ""
+      wait: 1
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 545
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+  "4":
+    id: "4"
+    taskid: 7d187d55-7187-446d-8817-25d2b510ae87
+    type: playbook
+    task:
+      id: 7d187d55-7187-446d-8817-25d2b510ae87
+      version: -1
+      name: Process Email - G
+      playbookName: Process Email - G
+      type: playbook
+      iscommand: false
+      brand: ""
+    nexttasks:
+      '#none#':
+      - "2"
+    separatecontext: true
+    view: |-
+      {
+        "position": {
+          "x": 50,
+          "y": 195
+        }
+      }
+    note: false
+    timertriggers: []
+    ignoreworker: false
+view: |-
+  {
+    "linkLabelsPosition": {},
+    "paper": {
+      "dimensions": {
+        "height": 590,
+        "width": 380,
+        "x": 50,
+        "y": 50
+      }
+    }
+  }
+inputs:
+- key: test
+  value:
+    complex:
+      root: File
+      accessor: EntryID
+  required: false
+  description: ""
+outputs:
+- contextPath: $(ParseCSV.ParsedCSV.IP)
+  description: IP found in parsed file
