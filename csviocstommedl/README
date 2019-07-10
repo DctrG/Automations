@@ -1,0 +1,13 @@
+Automation built in Demisto Playbook.
+
+Features:
+- List of IoC's in CSV format
+- User sends an email with file attached
+- Email with subject (b|B)lock matches incident type "Block IoC's" on Demisto.
+- This incident type triggers the "Block IoC's" playbook
+- The playbook performs the following:
+  Extract attachment from email
+  Parse attached CSV files and extract indicators
+  Add indicators to MineMeld LocalDB miner
+  
+  
